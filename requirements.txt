@@ -1,11 +1,12 @@
-# MT5 Trading HTTP Server Dependencies
+# MT5/MT4 Trading HTTP Server Dependencies
 
 # Core web framework
 Flask
 Flask-CORS
 
-# MT5 connection
+# MT5/MT4 connection
 MetaTrader5
+MetaTrader4
 
 # Data handling
 pandas

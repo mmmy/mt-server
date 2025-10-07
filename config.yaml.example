@@ -1,4 +1,23 @@
-# MT5 Trading HTTP Server Configuration
+# MT5/MT4 Trading HTTP Server Configuration
+
+# Trading Platform Configuration
+trading_platform: "mt5"  # Options: mt5, mt4
+
+# MT5 Settings
+mt5:
+  terminal_path: ""  # MT5 terminal path (optional, auto-detect if not specified)
+  timeout:
+    connect: 30  # Connection timeout in seconds
+    trade: 10    # Trade operation timeout in seconds
+
+# MT4 Settings  
+mt4:
+  terminal_path: ""  # MT4 terminal path (optional)
+  bridge_port: 7788  # MT4 bridge server port
+  ea_name: "MT4Bridge"  # MT4 Expert Advisor name
+  timeout:
+    connect: 30  # Connection timeout in seconds
+    trade: 10    # Trade operation timeout in seconds
 
 # Trading Settings
 trading:
@@ -43,19 +62,6 @@ custom_intervals:
     end_time: "15:00"
     timezone: "GMT+8"
     description: "亚洲交易时段"
-
-# MT5 Connection Settings
-mt5:
-  # MT5 terminal path (optional, auto-detect if not specified)
-  terminal_path: ""
-  
-  # MT5 connection settings (使用当前已登录的MT5客户端)
-  # 不需要账户配置，直接使用MT5客户端当前登录的账户
-  
-  # Connection timeout settings
-  timeout:
-    connect: 30  # Connection timeout in seconds
-    trade: 10    # Trade operation timeout in seconds
 
 # HTTP Server Settings
 server:

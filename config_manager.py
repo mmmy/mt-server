@@ -44,14 +44,26 @@ class ConfigManager:
     
     def _validate_config(self) -> None:
         """Validate configuration structure and values."""
-        required_sections = ['mt5', 'server', 'trading', 'logging', 'webhook']
+        required_sections = ['server', 'trading', 'logging', 'webhook']
         
         for section in required_sections:
             if section not in self.config:
                 raise ConfigError(f"Missing required configuration section: {section}")
         
-        # Validate MT5 configuration
-        self._validate_mt5_config()
+        # Get trading platform
+        platform = self.get_trading_platform()
+        
+        # Validate platform-specific configuration
+        if platform == 'mt5':
+            if 'mt5' not in self.config:
+                raise ConfigError("Missing required configuration section: mt5")
+            self._validate_mt5_config()
+        elif platform == 'mt4':
+            if 'mt4' not in self.config:
+                raise ConfigError("Missing required configuration section: mt4")
+            self._validate_mt4_config()
+        else:
+            raise ConfigError(f"Unsupported trading platform: {platform}")
         
         # Validate server configuration
         self._validate_server_config()
@@ -132,6 +144,24 @@ class ConfigManager:
             if not isinstance(symbols, list):
                 raise ConfigError("allowed_symbols must be a list")
     
+    def _validate_mt4_config(self) -> None:
+        """Validate MT4 configuration section."""
+        mt4_config = self.config['mt4']
+        
+        # Validate bridge port
+        if 'bridge_port' in mt4_config:
+            port = mt4_config['bridge_port']
+            if not isinstance(port, int) or port < 1 or port > 65535:
+                raise ConfigError("MT4 bridge port must be an integer between 1 and 65535")
+        
+        # Validate timeout settings
+        if 'timeout' in mt4_config:
+            timeout = mt4_config['timeout']
+            if 'connect' in timeout and (not isinstance(timeout['connect'], int) or timeout['connect'] <= 0):
+                raise ConfigError("MT4 connect timeout must be a positive integer")
+            if 'trade' in timeout and (not isinstance(timeout['trade'], int) or timeout['trade'] <= 0):
+                raise ConfigError("MT4 trade timeout must be a positive integer")
+    
     def _validate_logging_config(self) -> None:
         """Validate logging configuration section."""
         logging_config = self.config['logging']
@@ -150,6 +180,22 @@ class ConfigManager:
                 value = logging_config[field]
                 if not isinstance(value, int) or value < 0:
                     raise ConfigError(f"Logging {field} must be a non-negative integer")
+    
+    def get_trading_platform(self) -> str:
+        """
+        Get the trading platform configuration.
+        
+        Returns:
+            Trading platform name ('mt5' or 'mt4')
+        """
+        # 优先从环境变量读取
+        platform = os.getenv('TRADING_PLATFORM', 'mt5')
+        
+        # 如果环境变量没有，从配置文件读取
+        if not platform or platform == 'mt5':  # 默认为mt5
+            platform = self.config.get('trading_platform', 'mt5')
+        
+        return platform.lower()
     
     def get_config(self) -> Dict[str, Any]:
         """

@@ -18,6 +18,11 @@ class MT5Error(MT5ServerError):
     pass
 
 
+class MT4Error(MT5ServerError):
+    """MT4 connection and trading errors."""
+    pass
+
+
 class ValidationError(MT5ServerError):
     """Data validation errors."""
     pass

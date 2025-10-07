@@ -16,11 +16,11 @@ from flask_cors import CORS
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config_manager import ConfigManager
-from mt5_connector import MT5Connector
+from connectors.connector_factory import ConnectorFactory
 from trading_manager import TradingManager
 from utils.logger import setup_logger
 from utils.validators import validate_webhook_payload, validate_api_key
-from utils.exceptions import MT5Error, ConfigError, ValidationError
+from utils.exceptions import MT5Error, MT4Error, ConfigError, ValidationError
 from utils.chinese_parser import parse_chinese_message
 
 # Initialize Flask app
@@ -45,19 +45,28 @@ def initialize_app():
 
         # Setup logging
         logger = setup_logger(config['logging'])
-        logger.info("Starting MT5 Trading HTTP Server...")
+        
+        # Get trading platform
+        platform = config_manager.get_trading_platform()
+        logger.info(f"Starting {platform.upper()} Trading HTTP Server...")
 
-        # Initialize MT5 connector (使用当前已登录的MT5)
-        mt5_connector = MT5Connector(config['mt5'])
-        if not mt5_connector.connect():
-            raise MT5Error("Failed to connect to MT5 terminal")
+        # Create appropriate connector using factory
+        connector = ConnectorFactory.create_connector(platform, config)
+        if not connector.connect():
+            if platform == 'mt5':
+                raise MT5Error("Failed to connect to MT5 terminal")
+            else:
+                raise MT4Error("Failed to connect to MT4 terminal")
+
+        # Use unified connector variable name for compatibility
+        mt5_connector = connector
 
         # Initialize trading manager
         trading_config = config['trading'].copy()
         trading_config['custom_intervals'] = config.get('custom_intervals', {})
         trading_manager = TradingManager(mt5_connector, trading_config)
 
-        logger.info("Application initialized successfully")
+        logger.info(f"{platform.upper()} application initialized successfully")
         return True
 
     except Exception as e:
@@ -72,16 +81,19 @@ def initialize_app():
 def health_check():
     """Health check endpoint."""
     try:
-        mt5_status = mt5_connector.is_connected() if mt5_connector else False
+        # Get platform info
+        platform = config_manager.get_trading_platform() if config_manager else 'unknown'
+        connector_status = mt5_connector.is_connected() if mt5_connector else False
 
         # Get account info
         account_info = None
-        if mt5_connector and mt5_status:
+        if mt5_connector and connector_status:
             account_info = mt5_connector.get_account_info()
 
         return jsonify({
-            'status': 'healthy' if mt5_status else 'unhealthy',
-            'mt5_connected': mt5_status,
+            'status': 'healthy' if connector_status else 'unhealthy',
+            'platform': platform.upper(),
+            'connected': connector_status,
             'account_info': account_info,
             'timestamp': trading_manager.get_server_time() if trading_manager else None
         })
@@ -98,12 +110,14 @@ def get_status():
         if not validate_api_key(request, config_manager.get_config()['server'].get('security', {})):
             return jsonify({'error': 'Invalid API key'}), 401
 
-        # Get account info
+        # Get platform and account info
+        platform = config_manager.get_trading_platform() if config_manager else 'unknown'
         account_info = trading_manager.get_account_info() if trading_manager else None
 
         return jsonify({
             'server_status': 'running',
-            'mt5_connected': mt5_connector.is_connected() if mt5_connector else False,
+            'platform': platform.upper(),
+            'connected': mt5_connector.is_connected() if mt5_connector else False,
             'account_info': account_info,
             'timestamp': trading_manager.get_server_time() if trading_manager else None
         })
@@ -222,8 +236,8 @@ def webhook():
     except ValidationError as e:
         logger.warning(f"Webhook validation error: {e}")
         return jsonify({'error': str(e)}), 400
-    except MT5Error as e:
-        logger.error(f"MT5 error in webhook: {e}")
+    except (MT5Error, MT4Error) as e:
+        logger.error(f"Trading platform error in webhook: {e}")
         return jsonify({'error': str(e)}), 500
     except Exception as e:
         logger.error(f"Unexpected error in webhook: {e}")
