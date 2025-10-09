@@ -254,7 +254,12 @@ class MT5Connector:
                     'comment': pos.comment,
                     'magic': pos.magic,
                     'time': pos.time,
-                    'time_update': pos.time_update
+                    'time_update': pos.time_update,
+                    'external_id': pos.external_id,
+                    'identifier': pos.identifier,
+                    'reason': pos.reason,
+                    'time_msc': pos.time_msc,
+                    'time_update_msc': pos.time_update_msc
                 })
             
             return result

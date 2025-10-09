@@ -383,7 +383,7 @@ class TradingManager:
                     'position': position['ticket'],
                     'price': price,
                     'magic': position['magic'],
-                    'comment': f"Close {position['ticket']}",
+                    'comment': position['comment'],
                     'type_time': mt5.ORDER_TIME_GTC,
                     'type_filling': filling_mode,
                 }
