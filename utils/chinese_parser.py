@@ -49,7 +49,14 @@ class ChineseMessageParser:
         '票号': 'ticket',
         '持仓号': 'ticket',
         '滑点': 'deviation',
-        '最大滑点': 'deviation'
+        '最大滑点': 'deviation',
+        '信号ID': 'id',
+        '信号id': 'id',
+        '信号ID': 'id',
+        '信号标识': 'id',
+        '标识': 'id',
+        'ID': 'id',
+        'id': 'id'
         # 移除账户相关参数，现在只使用当前登录的MT5账户
     }
     
@@ -293,7 +300,7 @@ class ChineseMessageParser:
             standard_params['action'] = action
         
         # 复制其他标准参数
-        standard_fields = ['symbol', 'volume', 'sl', 'tp', 'price', 'comment', 'magic', 'ticket']
+        standard_fields = ['symbol', 'volume', 'sl', 'tp', 'price', 'comment', 'magic', 'ticket', 'id']
 
         # 复制标准字段
         for field in standard_fields:

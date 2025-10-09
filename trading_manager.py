@@ -258,7 +258,15 @@ class TradingManager:
         sl = payload.get('sl') or payload.get('stop_loss')
         tp = payload.get('tp') or payload.get('take_profit')
         magic = payload.get('magic', self.config.get('magic_number', 12345))
-        comment = sanitize_comment(payload.get('comment', 'Webhook Trade'))
+
+        # Handle ID field - if provided, use it as the comment
+        signal_id = payload.get('id')
+        if signal_id:
+            # If ID is provided, use it as the primary identifier
+            comment = sanitize_comment(str(signal_id))
+        else:
+            # Fall back to regular comment or default
+            comment = sanitize_comment(payload.get('comment', 'Webhook Trade'))
 
         # Get MT5 symbol info object for filling mode
         mt5_symbol_info = mt5.symbol_info(symbol)
