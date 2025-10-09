@@ -203,12 +203,12 @@ def webhook():
             del payload['account_id']
 
         # 计算到这个分钟结束需要等待的秒数
-        now = datetime.now()
-        seconds_to_next_minute = 60 - now.second # + 60  # 下个分钟的00秒
-        logger.info(f"Current time: {now.strftime('%H:%M:%S')}, waiting {seconds_to_next_minute} seconds")
+        # now = datetime.now()
+        # seconds_to_next_minute = 60 - now.second # + 60  # 下个分钟的00秒
+        # logger.info(f"Current time: {now.strftime('%H:%M:%S')}, waiting {seconds_to_next_minute} seconds")
         
-        # 等待到下个分钟结束
-        time.sleep(seconds_to_next_minute)
+        # # 等待到下个分钟结束
+        # time.sleep(seconds_to_next_minute)
         
         # Execute trade
         result = trading_manager.execute_webhook_trade(payload)
