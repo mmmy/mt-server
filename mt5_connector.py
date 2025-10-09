@@ -81,7 +81,8 @@ class MT5Connector:
                 if not mt5.initialize(path=terminal_path):
                     raise MT5Error(f"Failed to initialize MT5 with path: {terminal_path}")
             else:
-                if not mt5.initialize():
+                result = mt5.initialize();
+                if not result:
                     raise MT5Error("Failed to initialize MT5")
 
             # 直接获取当前已登录账户的信息，不需要重新登录
