@@ -344,18 +344,41 @@ class TradingManager:
         symbol = payload['symbol'].upper()
         ticket = payload.get('ticket')
         volume = payload.get('volume')  # Partial close volume
-        
+        signal_id = payload.get('id')  # Get signal ID for filtering
+
         # Get positions for the symbol
         positions = self.mt5_connector.get_positions(symbol)
         if not positions:
-            raise TradingError(f"No open positions found for {symbol}")
-        
+            # Return a friendly response instead of raising an error
+            return {
+                'message': f'No open positions found for {symbol}',
+                'closed_positions': []
+            }
+
         # If ticket specified, find specific position
         if ticket:
             position = next((p for p in positions if p['ticket'] == ticket), None)
             if not position:
                 raise TradingError(f"Position with ticket {ticket} not found")
             positions = [position]
+        elif signal_id:
+            # If signal ID provided, filter positions by comment
+            filtered_positions = []
+            signal_id_str = str(signal_id)
+            for pos in positions:
+                if pos.get('comment') == signal_id_str:
+                    filtered_positions.append(pos)
+
+            if not filtered_positions:
+                # Return a friendly response instead of raising an error
+                self.logger.warning(f"No positions found with signal ID: {signal_id}")
+                return {
+                    'message': f'No positions found with signal ID: {signal_id}',
+                    'closed_positions': []
+                }
+
+            self.logger.info(f"Found {len(filtered_positions)} position(s) with signal ID: {signal_id}")
+            positions = filtered_positions
         
         results = []
         for position in positions:
