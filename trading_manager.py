@@ -366,7 +366,9 @@ class TradingManager:
             filtered_positions = []
             signal_id_str = str(signal_id)
             for pos in positions:
-                if pos.get('comment') == signal_id_str:
+                # Check if comment starts with signal_id (header match)
+                comment = pos.get('comment', '')
+                if comment.startswith(signal_id_str):
                     filtered_positions.append(pos)
 
             if not filtered_positions:
